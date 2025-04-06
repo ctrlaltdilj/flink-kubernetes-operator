@@ -280,7 +280,7 @@ data:
 {{- if .Values.defaultConfiguration.append }}
   {{- $.Files.Get "conf/flink-conf.yaml"  | nindent 4 -}}
 {{- end }}
-{{- if index (.Values.defaultConfiguration) "config.yaml" }}
+{{- if hasKey (.Values.defaultConfiguration) "config.yaml" }}
   {{- index (.Values.defaultConfiguration) "config.yaml" | nindent 4 -}}
 {{- end }}
 {{- if .Values.watchNamespaces }}
