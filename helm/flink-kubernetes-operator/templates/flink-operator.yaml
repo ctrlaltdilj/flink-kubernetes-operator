@@ -294,7 +294,7 @@ data:
 {{- if .Values.defaultConfiguration.append }}
   {{- $.Files.Get "conf/flink-conf.yaml"  | nindent 4 -}}
 {{- end }}
-{{- if haskey (.Values.defaultConfiguration) "flink-conf.yaml" }}
+{{- if hasKey (.Values.defaultConfiguration) "flink-conf.yaml" }}
   {{- index (.Values.defaultConfiguration) "flink-conf.yaml" | nindent 4 -}}
 {{- end }}
 {{- if .Values.watchNamespaces }}
