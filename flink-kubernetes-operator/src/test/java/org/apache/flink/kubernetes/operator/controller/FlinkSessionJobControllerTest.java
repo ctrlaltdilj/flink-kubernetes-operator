@@ -23,6 +23,7 @@ import org.apache.flink.kubernetes.operator.TestUtils;
 import org.apache.flink.kubernetes.operator.TestingFlinkService;
 import org.apache.flink.kubernetes.operator.api.FlinkDeployment;
 import org.apache.flink.kubernetes.operator.api.FlinkSessionJob;
+import org.apache.flink.kubernetes.operator.api.lifecycle.ResourceLifecycleState;
 import org.apache.flink.kubernetes.operator.api.spec.FlinkVersion;
 import org.apache.flink.kubernetes.operator.api.spec.JobState;
 import org.apache.flink.kubernetes.operator.api.spec.UpgradeMode;
@@ -34,6 +35,7 @@ import org.apache.flink.kubernetes.operator.observer.JobStatusObserver;
 import org.apache.flink.kubernetes.operator.service.CheckpointHistoryWrapper;
 import org.apache.flink.kubernetes.operator.utils.EventRecorder;
 import org.apache.flink.runtime.client.JobStatusMessage;
+import org.apache.flink.util.SerializedThrowable;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
@@ -101,7 +103,7 @@ class FlinkSessionJobControllerTest {
 
         var event = testController.events().remove();
         Assertions.assertEquals(EventRecorder.Type.Warning.toString(), event.getType());
-        Assertions.assertEquals("SessionJobException", event.getReason());
+        Assertions.assertEquals("Error", event.getReason());
 
         testController.cleanup(sessionJob, context);
     }
@@ -615,6 +617,31 @@ class FlinkSessionJobControllerTest {
     }
 
     @Test
+    public void testErrorOnReconcileWithChainedExceptions() throws Exception {
+        sessionJob.getSpec().getJob().setInitialSavepointPath("msp");
+        flinkService.setMakeItFailWith(
+                new RuntimeException(
+                        "Deployment Failure",
+                        new IllegalStateException(
+                                null,
+                                new SerializedThrowable(new Exception("actual failure reason")))));
+        try {
+            testController.reconcile(sessionJob, context);
+            fail();
+        } catch (Exception expected) {
+        }
+        assertEquals(2, testController.events().size());
+
+        var event = testController.events().remove();
+        assertEquals("Submit", event.getReason());
+        event = testController.events().remove();
+        assertEquals("Error", event.getReason());
+        assertEquals(
+                "Deployment Failure -> IllegalStateException -> actual failure reason",
+                event.getMessage());
+    }
+
+    @Test
     public void verifyCanaryHandling() throws Exception {
         var canary = TestUtils.createCanaryJob();
         kubernetesClient.resource(canary).create();
@@ -653,6 +680,14 @@ class FlinkSessionJobControllerTest {
         assertEquals(CANCELLING, sessionJob.getStatus().getJobStatus().getState());
         assertFalse(deleteControl.isRemoveFinalizer());
         assertEquals(
+                ResourceLifecycleState.DELETING,
+                testController
+                        .getStatusUpdateCounter()
+                        .currentResource
+                        .getStatus()
+                        .getLifecycleState());
+        assertEquals(ResourceLifecycleState.DELETING, sessionJob.getStatus().getLifecycleState());
+        assertEquals(
                 configManager.getOperatorConfiguration().getProgressCheckInterval().toMillis(),
                 deleteControl.getScheduleDelay().get());
 
@@ -660,6 +695,14 @@ class FlinkSessionJobControllerTest {
         flinkService.setFlinkJobNotFound(true);
         deleteControl = testController.cleanup(sessionJob, context);
         assertTrue(deleteControl.isRemoveFinalizer());
+        assertEquals(
+                ResourceLifecycleState.DELETED,
+                testController
+                        .getStatusUpdateCounter()
+                        .currentResource
+                        .getStatus()
+                        .getLifecycleState());
+        assertEquals(ResourceLifecycleState.DELETED, sessionJob.getStatus().getLifecycleState());
     }
 
     private void verifyReconcileInitialSuspendedDeployment(FlinkSessionJob sessionJob)

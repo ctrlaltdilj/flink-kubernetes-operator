@@ -112,11 +112,14 @@ This serves as a full reference for FlinkDeployment and FlinkSessionJob custom r
 | v1_13 | No longer supported since 1.7 operator release. |
 | v1_14 | No longer supported since 1.7 operator release. |
 | v1_15 | Deprecated since 1.10 operator release. |
-| v1_16 |  |
+| v1_16 | Deprecated since 1.11 operator release. |
 | v1_17 |  |
 | v1_18 |  |
 | v1_19 |  |
 | v1_20 |  |
+| v2_0 |  |
+| majorVersion | int | The major integer from the Flink semver. For example for Flink 1.18.1 this would be 1. |
+| minorVersion | int | The minor integer from the Flink semver. For example for Flink 1.18.1 this would be 18. |
 
 ### IngressSpec
 **Class**: org.apache.flink.kubernetes.operator.api.spec.IngressSpec
@@ -180,6 +183,7 @@ This serves as a full reference for FlinkDeployment and FlinkSessionJob custom r
 | upgradeMode | org.apache.flink.kubernetes.operator.api.spec.UpgradeMode | Upgrade mode of the Flink job. |
 | allowNonRestoredState | java.lang.Boolean | Allow checkpoint state that cannot be mapped to any job vertex in tasks. |
 | savepointRedeployNonce | java.lang.Long | Nonce used to trigger a full redeployment of the job from the savepoint path specified in initialSavepointPath. In order to trigger redeployment, change the number to a different non-null value. Rollback is not possible after redeployment. |
+| autoscalerResetNonce | java.lang.Long | Nonce used to reset the autoscaler metrics, parallelism overrides and history for the job. This can be used to quickly go back to the initial user-provided parallelism settings without having to toggle the autoscaler on and off. In order to trigger the reset behaviour simply change the nonce to a new non-null value. |
 
 ### JobState
 **Class**: org.apache.flink.kubernetes.operator.api.spec.JobState
