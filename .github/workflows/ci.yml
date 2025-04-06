@@ -133,6 +133,10 @@ jobs:
             test: test_autoscaler.sh
           - flink-version: v1_16
             test: test_dynamic_config.sh
+          - flink-version: v1_17
+            test: test_dynamic_config.sh
+          - flink-version: v1_18
+            test: test_dynamic_config.sh
           - flink-version: v1_16
             test: test_dynamic_flink_conf.sh
 
