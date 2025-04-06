@@ -23,7 +23,7 @@
 # watchNamespaces: ["flink"]
 
 image:
-  repository: flink-kubernetes-operator
+  repository: localhost:5000/flink-kubernetes-operator
   pullPolicy: IfNotPresent
   tag: latest
   # If image digest is set then it takes precedence and the image tag will be ignored
@@ -163,7 +163,7 @@ defaultConfiguration:
   # If set to false, loads just the overrides as in (2).
   # This option has not effect, if create is equal to false.
   append: true
-  flink-conf.yaml: |+
+  config.yaml: |+
     # Flink Config Overrides
     kubernetes.operator.metrics.reporter.slf4j.factory.class: org.apache.flink.metrics.slf4j.Slf4jReporterFactory
     kubernetes.operator.metrics.reporter.slf4j.interval: 5 MINUTE
