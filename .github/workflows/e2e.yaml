@@ -30,10 +30,6 @@ on:
       append-java-version:
         type: boolean
         default: false
-      helm-values-yaml-path:
-        required: false
-        type: string
-        default: "helm/flink-kubernetes-operator/values.yaml"
 
 jobs:
   e2e_test:
