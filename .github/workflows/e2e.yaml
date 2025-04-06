@@ -110,3 +110,4 @@ jobs:
         run: |
           source e2e-tests/utils.sh
           stop_minikube
+
